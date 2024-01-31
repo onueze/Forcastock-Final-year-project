@@ -1,0 +1,17 @@
+
+{% block content %}
+
+
+<div>
+    <form method="POST" action="{% url 'register' %}">
+        {% csrf_token %}
+
+        <label for="email">Email:</label>
+        <input type="email" name="email" placeholder="Please Enter Your Email">
+
+
+        <input type="submit" value="Verify">
+    </form>
+</div>
+
+{% endblock content %}

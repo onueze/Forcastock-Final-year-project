@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <!-- Add your stylesheets, scripts, or other meta tags here -->
+</head>
+<body>
+
+<div>
+    <h2>Email Verification</h2>
+    <p>Please enter the verification code sent to your email.</p>
+
+    <form method="POST" action="{% url 'verify_code_register'%}">
+        {% csrf_token %}
+        
+        <label for="verification_code">Verification Code:</label>
+        <input type="text" id="verification_code" name="verification_code" required>
+        
+        <button type="submit">Verify</button>
+    </form>
+
+    <!-- You can include additional information or links here -->
+
+</div>
+
+</body>
+</html>
