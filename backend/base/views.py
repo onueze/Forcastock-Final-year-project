@@ -6,13 +6,19 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.conf import settings
 import secrets
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+#from rest_framework import viewsets, permission
+#from rest_framework.views import APIViewfrom 
+#from rest_framework.response import Response
 
 # Create your views here.
 
+@require_POST
 def loginPage(request):
     if request.method == 'POST':
         email = request.POST.get('username')
-        print(email)
 
         # Check if the email exists in the User model
         if User.objects.filter(username=email).exists():
