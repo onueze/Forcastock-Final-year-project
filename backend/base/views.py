@@ -15,7 +15,6 @@ from django.http import JsonResponse
 
 # Create your views here.
 
-@require_POST
 def loginPage(request):
     if request.method == 'POST':
         email = request.POST.get('username')
@@ -63,11 +62,10 @@ def verify_code_register(request):
                 if 'login_process' in request.session and request.session['login_process']:
                     # User is trying to log in
                     user = authenticate(request, username=email, password="")
-                    print(user, " USER")
                     if user is not None:
                         login(request, user)
                         messages.success(request, 'Login successful!')
-                        return redirect('register')  # Redirect to home page after successful login
+                        return redirect('dashboard')  # Redirect to home page after successful login
                     else:
                         messages.error(request, 'Invalid username or password.')
                         return redirect('login')  # Redirect back to login page for invalid credentials

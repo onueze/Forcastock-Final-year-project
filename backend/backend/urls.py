@@ -22,6 +22,6 @@ from django.urls import path, include
 urlpatterns = [
     path("admin/", admin.site.urls),
     # send user to base app urls
-    path('base/', include('base.urls')),
-    path('', include('frontend.urls')),
+    path('', include('base.urls')),
+    #path('', include('frontend.urls')),
 ]

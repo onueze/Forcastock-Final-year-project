@@ -44,9 +44,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "base.apps.BaseConfig",
+    "dashboard.apps.DashboardConfig",
     "rest_framework",
     "corsheaders",
     "frontend.apps.FrontendConfig"
+
 ]
 
 MIDDLEWARE = [
@@ -59,10 +61,11 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
+"""""
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000"
 ]
+"""""
 
 
 
