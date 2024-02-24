@@ -15241,7 +15241,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f00a775f",
+   "id": "69e3dbeb",
    "metadata": {},
    "source": [
     "## Visualization of Stock Prices"
@@ -15249,7 +15249,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "079af667",
+   "id": "eac3071b",
    "metadata": {},
    "source": [
     "Before we apply the engineering on the features and apply the machine learning models, we are going to plot the stock tickers to see the general movement of the stocks."
@@ -15258,7 +15258,7 @@
   {
    "cell_type": "code",
    "execution_count": 156,
-   "id": "ab805ae5",
+   "id": "4e7858c0",
    "metadata": {},
    "outputs": [
     {
@@ -15901,7 +15901,7 @@
   {
    "cell_type": "code",
    "execution_count": 158,
-   "id": "740fae3d",
+   "id": "214596c4",
    "metadata": {},
    "outputs": [],
    "source": [
@@ -15991,7 +15991,7 @@
   {
    "cell_type": "code",
    "execution_count": 160,
-   "id": "107c4a49",
+   "id": "c9aa91ad",
    "metadata": {},
    "outputs": [],
    "source": [
@@ -17770,7 +17770,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "d5ef50c3",
+   "id": "aabaafa7",
    "metadata": {},
    "source": [
     "## LSTM"
@@ -17778,7 +17778,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "1b432e98",
+   "id": "6ab4cf1c",
    "metadata": {},
    "source": [
     "Next, we are going to apply LSTM. "
@@ -17786,7 +17786,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "05fd3488",
+   "id": "9f765b71",
    "metadata": {},
    "source": [
     "### Data Preparation"
@@ -17794,7 +17794,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "753933cf",
+   "id": "b27a1b45",
    "metadata": {},
    "source": [
     "First of all, for simplicity, we are going to apply the LSTM model just on the apple stock and then see how it performs on all the stocks"
@@ -17803,7 +17803,7 @@
   {
    "cell_type": "code",
    "execution_count": 184,
-   "id": "210aafda",
+   "id": "9c9a4792",
    "metadata": {},
    "outputs": [],
    "source": [
@@ -17812,7 +17812,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f0f9f949",
+   "id": "837d5d00",
    "metadata": {},
    "source": [
     "For the sake of the LSTM model, we are going to remove the tomorrow column as well as the target column and strictly focus on \"Adj Close\" as the target"
@@ -17820,7 +17820,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "6ce38c1a",
+   "id": "1c8a47b0",
    "metadata": {},
    "source": [
     "The following is a function to visualize the validation and the training loss of the model"
@@ -17829,7 +17829,7 @@
   {
    "cell_type": "code",
    "execution_count": 185,
-   "id": "14b2d560",
+   "id": "b269f933",
    "metadata": {},
    "outputs": [],
    "source": [
@@ -17846,7 +17846,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "7c75a3c6",
+   "id": "3163b022",
    "metadata": {},
    "source": [
     "## Baseline LSTM"
@@ -17855,7 +17855,7 @@
   {
    "cell_type": "code",
    "execution_count": 186,
-   "id": "2e52e50d",
+   "id": "031669bd",
    "metadata": {},
    "outputs": [
     {
@@ -17993,7 +17993,7 @@
   {
    "cell_type": "code",
    "execution_count": 187,
-   "id": "05ea3029",
+   "id": "a2e60e71",
    "metadata": {},
    "outputs": [
     {
@@ -18027,7 +18027,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "2507b702",
+   "id": "c704bf4a",
    "metadata": {},
    "source": [
     "As seen by the graph, the LSTM model was able to get close to the actual price. What needs to be done now is to look for ways to improve this model. We are going to try to tune the hyperparameters."
@@ -18035,7 +18035,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "08109269",
+   "id": "ddedbeb0",
    "metadata": {},
    "source": [
     "Judging by the validation curve, there might be a high chance the model is overfitting, meaning that it performs well on the test data but will not achieve the same results to unseen new data. In the following, we are going increase the complexity of the model by adding layers and nodes to the nerual network architecture."
@@ -18043,7 +18043,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "1e4320e8",
+   "id": "247df3d9",
    "metadata": {},
    "source": [
     "## LSTM improved"
@@ -18052,7 +18052,7 @@
   {
    "cell_type": "code",
    "execution_count": 188,
-   "id": "dad4a513",
+   "id": "5281a55a",
    "metadata": {},
    "outputs": [
     {
@@ -18152,7 +18152,7 @@
   {
    "cell_type": "code",
    "execution_count": 189,
-   "id": "c0473008",
+   "id": "4d892e64",
    "metadata": {},
    "outputs": [
     {
@@ -18187,7 +18187,7 @@
   {
    "cell_type": "code",
    "execution_count": null,
-   "id": "ef1eb056",
+   "id": "8e68b3b7",
    "metadata": {},
    "outputs": [],
    "source": []
