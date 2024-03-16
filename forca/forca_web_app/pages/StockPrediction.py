@@ -12,7 +12,7 @@ MODEL_PATH = '../my_lstm_model.keras'
 SEQUENCE_LENGTH = 500
 
 @st.cache_data
-def load_dataset(ticker):
+def load_dataset(ticker,start_date,end_date):
     data = yf.download(ticker, start=start_date, end=end_date)
     return pd.DataFrame(data)
 
@@ -36,80 +36,95 @@ def predict_future_prices(model, last_sequence, scaler, n_future_steps):
         current_sequence[-1] = predicted
     return scaler.inverse_transform(np.array(future_predictions).reshape(-1, 1))
 
+
+
+def show_stock_prediction():
 # UI
-start_date = '2022-01-01'
-end_date = datetime.datetime.now().strftime("%Y-%m-%d")
-st.title("Forcastock Stock Prediction")
-ticker_symbol = st.text_input("Enter Ticker Symbol (e.g., AAPL):")
+    start_date = '2022-01-01'
+    end_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    st.title("Forcastock Stock Prediction")
+    ticker_symbol = st.text_input("Enter Ticker Symbol (e.g., AAPL):")
 
-if ticker_symbol:
-    df = load_dataset(ticker_symbol)
-    if not df.empty:
-        fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'])])
-        fig.update_layout(title=f"{ticker_symbol} Candlestick Chart", xaxis_title="Date", yaxis_title="Price", template="plotly_white")
-        st.plotly_chart(fig, use_container_width=True)
+    if ticker_symbol:
+        df = load_dataset(ticker_symbol,start_date,end_date)
+        if not df.empty:
+            fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'])])
+            fig.update_layout(title=f"{ticker_symbol} Candlestick Chart", xaxis_title="Date", yaxis_title="Price", template="plotly_white")
+            st.plotly_chart(fig, use_container_width=True)
 
-        lstm_model = load_lstm_model()
-        X, scaler = prepare_data(df)
+            lstm_model = load_lstm_model()
+            X, scaler = prepare_data(df)
         
-        n_future_steps = st.number_input("Number of days to predict:", min_value=1, value=10, max_value=100)
-        last_sequence = X[-1]
-        predicted_prices = predict_future_prices(lstm_model, last_sequence, scaler, n_future_steps)
+            n_future_steps = st.number_input("Number of days to predict:", min_value=1, value=10, max_value=100)
+            last_sequence = X[-1]
+            predicted_prices = predict_future_prices(lstm_model, last_sequence, scaler, n_future_steps)
         
-        future_dates = pd.date_range(start=df.index.max() + pd.Timedelta(days=1), periods=n_future_steps)
-        fig.add_trace(go.Scatter(x=future_dates, y=predicted_prices.flatten(), mode='lines', name='Predicted Prices', line=dict(color='red', dash='dot')))
-        fig.update_layout(title=f"{ticker_symbol} Stock Price Prediction", xaxis_rangeslider_visible=False)
-        st.plotly_chart(fig, use_container_width=True)
+            future_dates = pd.date_range(start=df.index.max() + pd.Timedelta(days=1), periods=n_future_steps)
+            fig.add_trace(go.Scatter(x=future_dates, y=predicted_prices.flatten(), mode='lines', name='Predicted Prices', line=dict(color='red', dash='dot')))
+            fig.update_layout(title=f"{ticker_symbol} Stock Price Prediction", xaxis_rangeslider_visible=False)
+            st.plotly_chart(fig, use_container_width=True)
 
-        # Displaying the predicted future price in HTML markdown
-        st.markdown(f"<h4 style='color:green;'>Predicted Future Price after {n_future_steps} days: ${predicted_prices[-1][0]:.2f}</h4>", unsafe_allow_html=True)
+            # Displaying the predicted future price in HTML markdown
+            st.markdown(f"<h4 style='color:green;'>Predicted Future Price after {n_future_steps} days: ${predicted_prices[-1][0]:.2f}</h4>", unsafe_allow_html=True)
 
 
 
-    try:
-        company_name = yf.Ticker(ticker_symbol).info['longName']
-        st.write(f"**Company Name:** {company_name}")
-    except KeyError:
-        st.write("Company name information not available.")
+        try:
+            company_name = yf.Ticker(ticker_symbol).info['longName']
+            st.write(f"**Company Name:** {company_name}")
+        except KeyError:
+            st.write("Company name information not available.")
 
-    try:
-        industry = yf.Ticker(ticker_symbol).info['industry']
-        st.write(f"**Industry:** {industry}")
-    except KeyError:
-        st.write("Industry information not available.")
+        try:
+            industry = yf.Ticker(ticker_symbol).info['industry']
+            st.write(f"**Industry:** {industry}")
+        except KeyError:
+            st.write("Industry information not available.")
 
-    try:
-        market_cap = yf.Ticker(ticker_symbol).info['marketCap']
-        st.write(f"**Market Cap:** ${market_cap:,}")
-    except KeyError:
-        st.write("Market Cap information not available.")
+        try:
+            market_cap = yf.Ticker(ticker_symbol).info['marketCap']
+            st.write(f"**Market Cap:** ${market_cap:,}")
+        except KeyError:
+            st.write("Market Cap information not available.")
 
-    try:
-        dividend_rate = yf.Ticker(ticker_symbol).info.get('dividendRate', 'N/A')
-        st.write(f"**Dividend Rate:** ${dividend_rate}")
-    except KeyError:
-        st.write("Dividend Rate information not available.")
+        try:
+            dividend_rate = yf.Ticker(ticker_symbol).info.get('dividendRate', 'N/A')
+            st.write(f"**Dividend Rate:** ${dividend_rate}")
+        except KeyError:
+            st.write("Dividend Rate information not available.")
 
-    try:
-        trailing_eps = yf.Ticker(ticker_symbol).info['trailingEps']
-        st.write(f"**EPS (TTM):** ${trailing_eps}")
-    except KeyError:
-        st.write("EPS (TTM) information not available.")
+        try:
+            trailing_eps = yf.Ticker(ticker_symbol).info['trailingEps']
+            st.write(f"**EPS (TTM):** ${trailing_eps}")
+        except KeyError:
+            st.write("EPS (TTM) information not available.")
 
-    try:
-        forward_pe = yf.Ticker(ticker_symbol).info['forwardPE']
-        st.write(f"**P/E Ratio (TTM):** {forward_pe}")
-    except KeyError:
-        st.write("P/E Ratio (TTM) information not available.")
+        try:
+            forward_pe = yf.Ticker(ticker_symbol).info['forwardPE']
+            st.write(f"**P/E Ratio (TTM):** {forward_pe}")
+        except KeyError:
+            st.write("P/E Ratio (TTM) information not available.")
 
-    try:
-        fifty_two_week_high = yf.Ticker(ticker_symbol).info['fiftyTwoWeekHigh']
-        st.write(f"**52 Week High:** ${fifty_two_week_high}")
-    except KeyError:
-        st.write("52 Week High information not available.")
+        try:
+            fifty_two_week_high = yf.Ticker(ticker_symbol).info['fiftyTwoWeekHigh']
+            st.write(f"**52 Week High:** ${fifty_two_week_high}")
+        except KeyError:
+            st.write("52 Week High information not available.")
 
-    try:
-        fifty_two_week_low = yf.Ticker(ticker_symbol).info['fiftyTwoWeekLow']
-        st.write(f"**52 Week Low:** ${fifty_two_week_low}")
-    except KeyError:
-        st.write("52 Week Low information not available.")
+        try:
+            fifty_two_week_low = yf.Ticker(ticker_symbol).info['fiftyTwoWeekLow']
+            st.write(f"**52 Week Low:** ${fifty_two_week_low}")
+        except KeyError:
+            st.write("52 Week Low information not available.")
+            
+
+# Check if the stock prediction page should be displayed
+if "current_page" in st.session_state:
+    if st.session_state.current_page == 'stock_prediction':
+        show_stock_prediction() 
+    elif st.session_state.current_page == "":
+        pass
+else:
+    # display the dashboard
+    pass
+    
