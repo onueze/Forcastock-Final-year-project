@@ -51,9 +51,9 @@ def display_dashboard():
 
     # Button to navigate to the stock prediction page
     if st.button("Predict Stock"):
+        st.session_state['selected_ticker'] = symbol
         # Update the session state to indicate the current page or action
         st.session_state.current_page = "stock_prediction"
-    
         # Rerun the app to reflect changes
         st.rerun()
 
@@ -94,21 +94,21 @@ def display_dashboard():
     except Exception as e:
         st.error('Error fetching news from Alpha Vantage: ' + str(e))
 
-
-def render_stock_prediction():
-    show_stock_prediction()
-    
     
 
 # Check if the dashboard page should be displayed
 if "current_page" in st.session_state:
     if st.session_state.current_page == 'dashboard':
         display_dashboard() 
-    elif st.session_state.current_page == "stock_prediction":
-        render_stock_prediction
+    elif st.session_state.current_page == 'stock_prediction':
+        show_stock_prediction()
 else:
-    # display the dashboard
+    # this means that the page was selected from the navigation bar
+   #st.session_state.current_page = 'dashboard'
+    #display_dashboard()
     pass
+    
+    
     
 
 

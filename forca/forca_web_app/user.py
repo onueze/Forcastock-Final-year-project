@@ -12,7 +12,12 @@ def authenticate_user(email, password):
             user = cursor.fetchone()
             cursor.close()
             conn.close()
-            return user
+            if user:
+                # If a user is found, return a dictionary with user details
+                return {'id': user[0], 'email': user[1]}
+            else:
+                return None
+            
         except psycopg2.Error as e:
             print("Error executing SQL query:", e)
             return None

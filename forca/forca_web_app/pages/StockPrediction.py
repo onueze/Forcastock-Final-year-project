@@ -66,6 +66,13 @@ def show_stock_prediction():
 
             # Displaying the predicted future price in HTML markdown
             st.markdown(f"<h4 style='color:green;'>Predicted Future Price after {n_future_steps} days: ${predicted_prices[-1][0]:.2f}</h4>", unsafe_allow_html=True)
+            
+            # Button to navigate to the stock prediction page
+            if st.button(f"Trade {ticker_symbol}"):
+                # Update the session state to indicate the current page or action
+                st.session_state.current_page = "demo_trading"
+                # Rerun the app to reflect changes
+                st.rerun()
 
 
 
@@ -122,8 +129,8 @@ def show_stock_prediction():
 if "current_page" in st.session_state:
     if st.session_state.current_page == 'stock_prediction':
         show_stock_prediction() 
-    elif st.session_state.current_page == "":
-        pass
+    elif st.session_state.current_page == "demo_trading":
+        st.write('demo trading page')
 else:
     # display the dashboard
     pass

@@ -3,6 +3,8 @@ from database import *
 from user import authenticate_user, register_user
 # Importing other pages
 from pages.Dashboard import display_dashboard
+from pages.StockPrediction import show_stock_prediction
+from pages.DemoTrading import show_demo_trading
 
 def login_page():
     email = st.text_input('Email Address', key='login_email_input')
@@ -11,11 +13,16 @@ def login_page():
     if st.button('Login', key='login_button'):
         user = authenticate_user(email, password)
         if user:
+            # User is authenticated successfully
             st.session_state['user_authenticated'] = True
+            st.session_state['user_id'] = user['id']  # Access and store the user's ID
+            st.session_state['user_email'] = user['email']  # Access and store the user's email
             st.session_state['current_page'] = 'dashboard'  # Direct user to dashboard after login
+            st.success(f"Logged in successfully as {user['email']}")
             st.rerun()  # Rerun the app to reflect the session state change
         else:
             st.error('Invalid email or password. Please try again.')
+
 
 def signup_page():
     st.subheader('Sign Up')
@@ -48,5 +55,11 @@ def app():
             st.session_state['current_page'] = 'dashboard'  # 'Home' page
 
         if st.session_state['current_page'] == 'dashboard':
+            display_dashboard()  
             
-            display_dashboard()  # Display dashboard
+        elif st.session_state['current_page'] == 'stock_prediction':
+            show_stock_prediction()
+            
+        elif st.session_state['current_page'] == 'demo_trading':
+            show_demo_trading()
+        
