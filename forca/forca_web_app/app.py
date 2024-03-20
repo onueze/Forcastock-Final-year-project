@@ -1,12 +1,15 @@
 import streamlit as st
 from database import *
 from user import authenticate_user, register_user
+from About import about_page
 # Importing other pages
-from pages.Dashboard import display_dashboard
-from pages.StockPrediction import show_stock_prediction
-from pages.DemoTrading import show_demo_trading
+
+#from pages.Dashboard import display_dashboard
+#from pages.StockPrediction import show_stock_prediction
+#from pages.DemoTrading import show_demo_trading
 
 def login_page():
+    st.subheader('Login')
     email = st.text_input('Email Address', key='login_email_input')
     password = st.text_input('Password', type='password', key='login_password_input')
 
@@ -17,7 +20,7 @@ def login_page():
             st.session_state['user_authenticated'] = True
             st.session_state['user_id'] = user['id']  # Access and store the user's ID
             st.session_state['user_email'] = user['email']  # Access and store the user's email
-            st.session_state['current_page'] = 'dashboard'  # Direct user to dashboard after login
+            st.session_state['current_page'] = 'about'  # Direct user to dashboard after login
             st.success(f"Logged in successfully as {user['email']}")
             st.rerun()  # Rerun the app to reflect the session state change
         else:
@@ -41,6 +44,8 @@ def app():
     st.title('Welcome to Forcastock')
     if 'user_authenticated' not in st.session_state:
         st.session_state['user_authenticated'] = False
+    if 'current_page' not in st.session_state:
+        st.session_state['current_page'] = 'login'  # Default page
 
     if not st.session_state['user_authenticated']:
         choice = st.radio('Login/Signup', ['Login', 'Sign Up'])
@@ -48,18 +53,8 @@ def app():
             login_page()
         else:
             signup_page()
-    else:
-        # Navigation for authenticated users
-        if 'current_page' not in st.session_state:
-            print('set')
-            st.session_state['current_page'] = 'dashboard'  # 'Home' page
-
-        if st.session_state['current_page'] == 'dashboard':
-            display_dashboard()  
+        
+    else:    
+        about_page()
             
-        elif st.session_state['current_page'] == 'stock_prediction':
-            show_stock_prediction()
-            
-        elif st.session_state['current_page'] == 'demo_trading':
-            show_demo_trading()
         

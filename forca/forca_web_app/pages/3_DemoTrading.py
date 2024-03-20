@@ -12,7 +12,7 @@ def load_dataset(ticker, start_date='2022-01-01', end_date=datetime.datetime.now
 
 
 def get_current_price(ticker):
-    data = yf.Ticker(ticker).history(period='1d')
+    data = yf.Ticker(ticker).history(period='1m')
     return data['Close'].iloc[-1]
 
 def update_transaction(user_id, ticker, lot_size, transaction_type, current_price):
@@ -92,7 +92,8 @@ def trade_stocks():
                 sell_stock(ticker, lot_size)
                 st.rerun()
 
-        data = load_dataset(ticker)
+        start_date = st.date_input("Start Date", value=datetime.date.today() - datetime.timedelta(days=365))
+        data = load_dataset(ticker, start_date=start_date)
         if not data.empty:
             analysis_options = st.multiselect('Select Analysis Options', ['Moving Averages', 'Bollinger Bands'])
             fig = go.Figure(data=[go.Candlestick(x=data.index, open=data['Open'], high=data['High'], low=data['Low'], close=data['Close'])])
@@ -155,7 +156,12 @@ def display_open_trades(user_id):
                         # Calculate gain/loss percentage
                         current_price = get_current_price(row['Symbol'])
                         price = float(row['Price'])  # Convert to float
-                        gain_loss = ((current_price - price) / price) * 100
+                        if row['Type'] == 'SELL':
+                            # Profit when current price is lower for a sell position
+                            gain_loss = ((price - current_price) / price) * 100  
+                        else:
+                            
+                            gain_loss = ((current_price - price) / price) * 100  
                         
                         # Display gain/loss in green if positive, red if negative
                         if gain_loss >= 0:
@@ -331,15 +337,13 @@ def show_demo_trading():
         st.write(f"Account Balance: ${balance:.2f}")
         st.write("Current Holdings: Placeholder") 
 
-# Check if the dashboard page should be displayed
-if "current_page" in st.session_state:
-    if st.session_state.current_page == 'demo_trading':
-        show_demo_trading()
-    elif st.session_state.current_page == '':
-        pass
+user_id = st.session_state.get('user_id', None)
+if user_id:
+    show_demo_trading()
+    st.session_state['current_page'] = 'demo_trading'
 else:
-    # this means that the page was selected from the navigation bar
-    pass
-    
+    st.error('Please log in to view demo trading.')
+
+
     
     

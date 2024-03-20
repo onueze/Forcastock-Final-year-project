@@ -1,6 +1,6 @@
 from database import *
 from user import *
-from pages.StockPrediction import show_stock_prediction
+#from pages.StockPrediction import show_stock_prediction
 
 import streamlit as st
 import yfinance as yf
@@ -12,6 +12,7 @@ import requests
 
 # Function to display the dashboard
 def display_dashboard():
+
     # Dashboard Title
     st.title('Stock Market Dashboard')
 
@@ -34,11 +35,18 @@ def display_dashboard():
         df = ticker.history(period='1d', start=start, end=end)
         df.reset_index(inplace=True)
         return df
+        
+    def get_current_price(ticker):
+        data = yf.Ticker(ticker).history(period='1m')
+        return data['Close'].iloc[-1]
+        
 
     # Retrieve user input
     start, end, symbol = get_input()
     df = get_data(symbol, start, end)
     company_name = get_company_name(symbol)
+        
+    current_price = get_current_price(symbol)
 
     # Displaying the stock information
     st.header(company_name + " Stock Price\n")
@@ -63,7 +71,7 @@ def display_dashboard():
     st.metric(label="Closing Price", value=f"${df['Close'].iloc[-1]:.2f}")
     st.metric(label="Volume", value=f"{df['Volume'].iloc[-1]}")
 
-    
+        
     # Function to fetch news from Alpha Vantage
     def get_alpha_vantage_news(api_key, symbol):
         base_url = "https://www.alphavantage.co/query"
@@ -78,14 +86,14 @@ def display_dashboard():
     # Fetch and display news based on user input symbol
     st.title(f'Stock News from Alpha Vantage for {company_name}')
 
-    api_key = "YOUR_ALPHA_VANTAGE_API_KEY"  # Insert your API key here
+    api_key = "YOUR_ALPHA_VANTAGE_API_KEY"  # API key here
 
     try:
         news_json = get_alpha_vantage_news(api_key, symbol)
         news_articles = news_json.get('feed', [])
         count = 0
         for article in news_articles:
-            if count == 3:
+            if count == 5:
                 break
             st.subheader(article['title'])
             st.write(article['summary'])
@@ -93,20 +101,18 @@ def display_dashboard():
             count += 1
     except Exception as e:
         st.error('Error fetching news from Alpha Vantage: ' + str(e))
+            
+            
 
-    
 
-# Check if the dashboard page should be displayed
-if "current_page" in st.session_state:
-    if st.session_state.current_page == 'dashboard':
-        display_dashboard() 
-    elif st.session_state.current_page == 'stock_prediction':
-        show_stock_prediction()
+user_id = st.session_state.get('user_id', None)
+if user_id:
+    display_dashboard()
+    st.session_state['current_page'] = 'dashboard'
 else:
-    # this means that the page was selected from the navigation bar
-   #st.session_state.current_page = 'dashboard'
-    #display_dashboard()
-    pass
+    st.error('Please log in to view dashboard.')
+
+
     
     
     
