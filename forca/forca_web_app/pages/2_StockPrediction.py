@@ -8,6 +8,11 @@ from tensorflow.keras.models import load_model
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
+import requests
+from bs4 import BeautifulSoup
+
+
+
 MODEL_PATH = '../my_lstm_model.keras'
 SEQUENCE_LENGTH = 500
 
@@ -37,6 +42,21 @@ def predict_future_prices(model, last_sequence, scaler, n_future_steps):
     return scaler.inverse_transform(np.array(future_predictions).reshape(-1, 1))
 
 
+@st.cache_data
+def scrape_sp500_tickers():
+    url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+    html = requests.get(url).text
+    soup = BeautifulSoup(html, 'html.parser')
+    table = soup.find('table', {'class': 'wikitable sortable'})
+    
+    # Initialize an empty list to store tickers
+    tickers = []
+    # Loop over each row in the table except the header row
+    for row in table.findAll('tr')[1:]:
+        ticker = row.findAll('td')[0].text.strip()
+        company_name = row.findAll('td')[1].text.strip()
+        tickers.append((ticker, company_name))
+    return tickers
 
 def show_stock_prediction():
 # UI
@@ -45,7 +65,17 @@ def show_stock_prediction():
         st.title("Forcastock Stock Prediction")
         start_date = st.date_input("Start Date", value=datetime.date(2022, 1, 1))
         end_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        ticker_symbol = st.text_input("Enter Ticker Symbol (e.g., AAPL):", key='ticker_symbol_input')
+        
+        
+        # Scrape S&P 500 tickers
+        sp500_tickers = scrape_sp500_tickers()
+    
+        # options for the selectbox
+        options = [f"{ticker} - {company}" for ticker, company in sp500_tickers]
+        # Sort options alphabetically by company name
+        options.sort()
+        selected_option = st.selectbox("Select a company:", options)
+        ticker_symbol = selected_option.split(" - ")[0]
 
         if ticker_symbol:
             df = load_dataset(ticker_symbol,start_date,end_date)

@@ -6,11 +6,30 @@ import datetime
 from database import connect_to_database
 import time
 
+import requests
+from bs4 import BeautifulSoup
+
 
 # Margin percentage for both buy and sell positions
 MARGIN_PERCENTAGE = 10  
 
+
+@st.cache_data
+def scrape_sp500_tickers():
+    url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+    html = requests.get(url).text
+    soup = BeautifulSoup(html, 'html.parser')
+    table = soup.find('table', {'class': 'wikitable sortable'})
     
+    # Initialize an empty list to store tickers
+    tickers = []
+    # Loop over each row in the table except the header row
+    for row in table.findAll('tr')[1:]:
+        ticker = row.findAll('td')[0].text.strip()
+        company_name = row.findAll('td')[1].text.strip()
+        tickers.append((ticker, company_name))
+    return tickers
+
 
 def load_dataset(ticker, start_date='2022-01-01', end_date=datetime.datetime.now().strftime("%Y-%m-%d")):
     data = yf.download(ticker, start=start_date, end=end_date)
@@ -151,7 +170,17 @@ def calculate_bollinger_bands(data, window=20, num_of_std=2):
 
 def trade_stocks():
     st.subheader("Trade Stocks")
-    ticker = st.text_input("Enter Ticker Symbol (e.g., AAPL):").upper()
+    
+    # Scrape S&P 500 tickers
+    sp500_tickers = scrape_sp500_tickers()
+    
+    # options for the selectbox
+    options = [f"{ticker} - {company}" for ticker, company in sp500_tickers]
+    # Sort options alphabetically by company name
+    options.sort()
+    selected_option = st.selectbox("Select a company:", options)
+    ticker = selected_option.split(" - ")[0]
+    
     if ticker:
         try:
             current_price = get_current_price(ticker)
