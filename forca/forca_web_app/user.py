@@ -1,19 +1,19 @@
 from database import *
 
 
-def authenticate_user(email, password):
+def authenticate_user(email):
     conn = connect_to_database()
     if conn:
         try:
             cursor = conn.cursor()
             # Check if the user with the given email and password exists in the database
-            query = "SELECT * FROM users WHERE email = %s AND password = %s"
-            cursor.execute(query, (email, password))
+            query = "SELECT * FROM users WHERE email = %s"
+            cursor.execute(query, (email,))
             user = cursor.fetchone()
             cursor.close()
             conn.close()
             if user:
-                # If a user is found, return a dictionary with user details
+                # If a user is found, return a dictionary wisth user details
                 return {'id': user[0], 'email': user[1]}
             else:
                 return None
@@ -24,7 +24,7 @@ def authenticate_user(email, password):
     else:
         return None
     
-def register_user(email, password):
+def register_user(email):
     conn = connect_to_database()
     if conn:
         try:
@@ -38,8 +38,8 @@ def register_user(email, password):
                 print("User with this email already exists.")
             else:
                 # Insert the new user into the database
-                insert_query = "INSERT INTO users (email, password) VALUES (%s, %s)"
-                cursor.execute(insert_query, (email, password))
+                insert_query = "INSERT INTO users (email) VALUES (%s)"
+                cursor.execute(insert_query, (email,))
                 conn.commit()
                 print("User registered successfully.")
             

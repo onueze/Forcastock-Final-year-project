@@ -48,9 +48,10 @@ def create_table(table_name, table_schema):
 def create_all_tables():
     # Define table names and schemas
     tables = [
-        ("users", "id SERIAL PRIMARY KEY, email VARCHAR(100) NOT NULL, password VARCHAR(100) NOT NULL"),
+        ("users", "id SERIAL PRIMARY KEY, email VARCHAR(100) NOT NULL"),
         ("demo_accounts", "demo_id SERIAL PRIMARY KEY, allocated_amount DECIMAL(10, 2) NOT NULL, user_id INT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id)"),
-        ("transactions", "transaction_id SERIAL PRIMARY KEY, transaction_type VARCHAR(5) NOT NULL CHECK (transaction_type IN ('BUY', 'SELL')), stock_symbol VARCHAR(10) NOT NULL, quantity INT NOT NULL, price DECIMAL(10, 2) NOT NULL, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, demo_id INT NOT NULL, status VARCHAR(10) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')), FOREIGN KEY (demo_id) REFERENCES demo_accounts(demo_id)")
+        ("transactions", "transaction_id SERIAL PRIMARY KEY, transaction_type VARCHAR(5) NOT NULL CHECK (transaction_type IN ('BUY', 'SELL')), stock_symbol VARCHAR(10) NOT NULL, quantity INT NOT NULL, price DECIMAL(10, 2) NOT NULL, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, demo_id INT NOT NULL, status VARCHAR(10) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED')), FOREIGN KEY (demo_id) REFERENCES demo_accounts(demo_id)"),
+        ("user_trade_streaks", "user_id INT NOT NULL, last_trade_time TIMESTAMP NOT NULL, current_streak INT DEFAULT 0, longest_streak INT DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(id), PRIMARY KEY (user_id)")
         # Add more tables here as needed
     ]
 

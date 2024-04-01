@@ -49,6 +49,10 @@ def display_dashboard():
     current_price = get_current_price(symbol)
 
     # Displaying the stock information
+    company_name = get_company_name(symbol)
+    if company_name is None:
+        st.error("Failed to fetch company name.")
+        return  # Exit the function early since no fetch of the company name
     st.header(company_name + " Stock Price\n")
 
     # Using Plotly Express for the line chart
@@ -86,7 +90,7 @@ def display_dashboard():
     # Fetch and display news based on user input symbol
     st.title(f'Stock News from Alpha Vantage for {company_name}')
 
-    api_key = "YOUR_ALPHA_VANTAGE_API_KEY"  # API key here
+    api_key = "SY6VYHGY5D4SITEN"  # API key here
 
     try:
         news_json = get_alpha_vantage_news(api_key, symbol)

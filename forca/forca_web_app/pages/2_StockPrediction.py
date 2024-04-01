@@ -18,7 +18,7 @@ def load_dataset(ticker,start_date,end_date):
 
 @st.cache_resource
 def load_lstm_model():
-    return load_model(MODEL_PATH, custom_objects={'Orthogonal': Orthogonal(gain=1.0, seed=42)})
+    return load_model(MODEL_PATH)
 
 def prepare_data(df):
     scaler = MinMaxScaler()
@@ -45,7 +45,7 @@ def show_stock_prediction():
         st.title("Forcastock Stock Prediction")
         start_date = st.date_input("Start Date", value=datetime.date(2022, 1, 1))
         end_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        ticker_symbol = st.text_input("Enter Ticker Symbol (e.g., AAPL):")
+        ticker_symbol = st.text_input("Enter Ticker Symbol (e.g., AAPL):", key='ticker_symbol_input')
 
         if ticker_symbol:
             df = load_dataset(ticker_symbol,start_date,end_date)

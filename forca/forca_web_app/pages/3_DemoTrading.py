@@ -4,7 +4,13 @@ import yfinance as yf
 import plotly.graph_objects as go
 import datetime
 from database import connect_to_database
+import time
 
+
+# Margin percentage for both buy and sell positions
+MARGIN_PERCENTAGE = 10  
+
+    
 
 def load_dataset(ticker, start_date='2022-01-01', end_date=datetime.datetime.now().strftime("%Y-%m-%d")):
     data = yf.download(ticker, start=start_date, end=end_date)
@@ -17,24 +23,23 @@ def get_current_price(ticker):
 
 def update_transaction(user_id, ticker, lot_size, transaction_type, current_price):
     conn = connect_to_database()
-    print('not yet SUCCESS')
     if conn is not None:
         try:
             with conn.cursor() as cur:
+                # demo account ID associated with the user
                 cur.execute("SELECT demo_id FROM demo_accounts WHERE user_id = %s;", (user_id,))
                 demo_id = cur.fetchone()[0]
+
+                # Insert the new transaction into the transactions table
                 cur.execute("""
                     INSERT INTO transactions (transaction_type, stock_symbol, quantity, price, demo_id)
                     VALUES (%s, %s, %s, %s, %s);
                 """, (transaction_type, ticker, lot_size, current_price, demo_id))
-                if transaction_type == "BUY":
-                    cur.execute("UPDATE demo_accounts SET allocated_amount = allocated_amount - %s WHERE demo_id = %s;", (current_price * lot_size, demo_id))
-                else:
-                    cur.execute("UPDATE demo_accounts SET allocated_amount = allocated_amount + %s WHERE demo_id = %s;", (current_price * lot_size, demo_id))
+
                 conn.commit()
                 return True, f"Transaction successful: {transaction_type} {lot_size} shares of {ticker} at ${current_price:.2f} each."
         except Exception as e:
-            return False, "Database operation failed."
+            return False, f"Database operation failed: {str(e)}"
         finally:
             conn.close()
     else:
@@ -43,20 +48,94 @@ def update_transaction(user_id, ticker, lot_size, transaction_type, current_pric
 def buy_stock(ticker, lot_size):
     current_price = get_current_price(ticker)
     user_id = st.session_state.user_id
+    total_purchase_price = current_price * lot_size
+    margin_required = total_purchase_price * MARGIN_PERCENTAGE / 100
+
+    # Check if the user has enough balance to cover the margin
+    has_account, demo_id, balance = check_or_create_demo_account(user_id)
+    if not has_account:
+        st.error("Demo account does not exist or could not be created.")
+        return
+
+    if balance < margin_required:
+
+        placeholder = st.empty()
+        # Show a message
+        placeholder.error(f"Insufficient balance to cover the margin required for this purchase. Margin required: ${margin_required}")
+        # Wait for 2 seconds
+        time.sleep(2)
+        # Clear the message
+        placeholder.empty()
+        return
+
+    # Proceed with the transaction since the balance is sufficient to cover the margin
     success, message = update_transaction(user_id, ticker, lot_size, "BUY", current_price)
     if success:
-        st.success(message)
+        # Deduct the margin required for the buy position from the account balance
+        update_account_balance(user_id, -margin_required)
+        
+        placeholder = st.empty()
+        # Show a message
+        placeholder.success(message)
+        # Wait for 3 seconds
+        time.sleep(3)
+        # Clear the message
+        placeholder.empty()
     else:
         st.error(message)
 
 def sell_stock(ticker, lot_size):
     current_price = get_current_price(ticker)
     user_id = st.session_state.user_id
+    total_purchase_price = current_price * lot_size
+    margin_required = total_purchase_price * MARGIN_PERCENTAGE / 100
+
+    # Check if the user has enough balance to cover the margin
+    has_account, demo_id, balance = check_or_create_demo_account(user_id)
+    if not has_account:
+        st.error("Demo account does not exist or could not be created.")
+        return
+
+    if balance < margin_required:
+        placeholder = st.empty()
+        # Show a message
+        placeholder.error(f"Insufficient balance to cover the margin required for this purchase. Margin required: ${margin_required}")
+        # Wait for 2 seconds
+        time.sleep(2)
+        # Clear the message
+        placeholder.empty()
+        return
+
     success, message = update_transaction(user_id, ticker, lot_size, "SELL", current_price)
     if success:
-        st.success(message)
+        # margin required for the sell position to the account balance
+        update_account_balance(user_id, -margin_required)
+        
+        placeholder = st.empty()
+        # Show a message
+        placeholder.success(message)
+        # Wait for 3 seconds
+        time.sleep(3)
+        # Clear the message
+        placeholder.empty()
     else:
         st.error(message)
+        
+def update_account_balance(user_id, amount):
+    conn = connect_to_database()
+    if conn is not None:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE demo_accounts
+                    SET allocated_amount = allocated_amount + %s
+                    WHERE user_id = %s;
+                """, (amount, user_id))
+                conn.commit()
+        except Exception as e:
+            print(f"Failed to update account balance: {str(e)}")
+        finally:
+            conn.close()
 
 def calculate_moving_averages(data, windows=[20, 50]):
     for window in windows:
@@ -117,7 +196,6 @@ def display_open_trades(user_id):
     if conn is not None:
         try:
             with conn.cursor() as cur:
-                # Fetch all open trades for the user
                 cur.execute("""
                     SELECT transaction_id, transaction_type, stock_symbol, quantity, price, timestamp
                     FROM transactions
@@ -126,54 +204,46 @@ def display_open_trades(user_id):
                     ) AND status = 'OPEN';
                 """, (user_id,))
 
-                # Fetch rows
                 trades = cur.fetchall()
 
                 if trades:
-                    # Convert the trades to a DataFrame for display
                     df = pd.DataFrame(trades, columns=['Transaction ID', 'Type', 'Symbol', 'Quantity', 'Price', 'Timestamp'])
                     st.subheader("Open Trades")
                     
-                    # Display the table header
-                    cols = st.columns([2, 2, 2, 2, 2, 2, 2, 2])
-                    headers = ['Transaction ID', 'Type', 'Symbol', 'Quantity', 'Price', 'Timestamp', 'Gain/Loss', 'Action']
+                    cols = st.columns([3, 3, 3, 3, 3, 3, 3, 3, 3])
+                    headers = ['Transaction ID', 'Type', 'Symbol', 'Quantity', 'Price', 'Timestamp', 'Gain/Loss %', 'Gain/Loss $', 'Action']
                     for col, header in zip(cols, headers):
                         col.write(header)
 
-                    # Display each trade with a Close Position button
                     for index, row in df.iterrows():
-                        
-                        
-                        cols = st.columns([2, 2, 2, 2, 2, 2, 2, 2])
-                        # row data
+                        cols = st.columns([3, 3, 3, 3, 3, 3, 3, 3, 3])
                         cols[0].write(row['Transaction ID'])
                         cols[1].write(row['Type'])
                         cols[2].write(row['Symbol'])
                         cols[3].write(row['Quantity'])
                         cols[4].write(f"${row['Price']:.2f}")
                         cols[5].write(row['Timestamp'].strftime('%Y-%m-%d %H:%M:%S'))
-                        
-                        # Calculate gain/loss percentage
+
                         current_price = get_current_price(row['Symbol'])
-                        price = float(row['Price'])  # Convert to float
-                        if row['Type'] == 'SELL':
-                            # Profit when current price is lower for a sell position
-                            gain_loss = ((price - current_price) / price) * 100  
+                        price = float(row['Price'])
+                        quantity = row['Quantity']
+                        if row['Type'] == 'BUY':
+                            dollar_gain_loss = (current_price - price) * quantity  
                         else:
-                            
-                            gain_loss = ((current_price - price) / price) * 100  
+                            dollar_gain_loss = (price - current_price) * quantity
                         
-                        # Display gain/loss in green if positive, red if negative
-                        if gain_loss >= 0:
+                        gain_loss_percentage = (dollar_gain_loss / (price * quantity)) * 100
+                        
+                        if gain_loss_percentage >= 0:
                             color = 'green'
+                            
                         else:
                             color = 'red'
-                            
-                        cols[6].markdown(f"<span style='color:{color};'>{gain_loss:+.2f}%</span>", unsafe_allow_html=True)
+                        
+                        cols[6].markdown(f"<span style='color:{color};'>{gain_loss_percentage:+.2f}%</span>", unsafe_allow_html=True)
+                        cols[7].markdown(f"<span style='color:{color};'>${dollar_gain_loss:+.2f}</span>", unsafe_allow_html=True)
 
-                        # Close Position button
-                        if cols[7].button("Close Position", key=row['Transaction ID']):
-                            # function to close the trade
+                        if cols[8].button("Close Position", key=row['Transaction ID']):
                             close_trade(user_id, row['Transaction ID'])
                             st.rerun()
 
@@ -181,11 +251,12 @@ def display_open_trades(user_id):
                     st.write("No open trades found.")
 
         except Exception as e:
-            st.error("Failed to fetch open trades: " + str(e))
+            st.error(f"Failed to fetch open trades: {e}")
         finally:
             conn.close()
     else:
         st.error("Failed to connect to the database.")
+
         
 
     
@@ -206,14 +277,25 @@ def close_trade(user_id, transaction_id):
                 if transaction:
                     stock_symbol, quantity, price, transaction_type = transaction
                     current_price = get_current_price(stock_symbol)
-                    
-                    # Reverse the transaction type for closing the trade
+
+                    # Ensure all numbers are floats for calculation
+                    transaction_price = float(price)
+                    quantity = float(quantity)
+                    current_price = float(current_price)
+
+                    margin_used = transaction_price * quantity * MARGIN_PERCENTAGE / 100
+
+                    # Determine profit or loss
                     if transaction_type == 'BUY':
-                        
-                        reverse_type = 'SELL'
-                    else:
-                        reverse_type = 'BUY'
-                    
+                        profit_loss = (current_price - transaction_price) * quantity
+                        net_balance_change = profit_loss + margin_used  # Return margin and add profit or deduct loss
+                    else:  # SELL
+                        profit_loss = (transaction_price - current_price) * quantity
+                        net_balance_change = profit_loss + margin_used  # Return margin and add profit or deduct loss
+
+                    # Reverse the transaction type for closing the trade
+                    reverse_type = 'BUY' if transaction_type == 'SELL' else 'SELL'
+
                     # Insert the closing transaction
                     cur.execute("""
                         INSERT INTO transactions (transaction_type, stock_symbol, quantity, price, demo_id, status)
@@ -229,27 +311,67 @@ def close_trade(user_id, transaction_id):
                         WHERE transaction_id = %s;
                     """, (transaction_id,))
                     
-                    # Update the demo account balance
-                    if reverse_type == 'SELL':
-                        # If closing a buy, increase balance
-                        balance_change = current_price * quantity
-                    else:
-                        # If closing a sell, decrease balance
-                        balance_change = -current_price * quantity
+                    # Update the account balance
+                    update_account_balance(user_id, net_balance_change)
 
-                    cur.execute("""
-                        UPDATE demo_accounts
-                        SET allocated_amount = allocated_amount + %s
-                        WHERE user_id = %s;
-                    """, (balance_change, user_id))
-                    
                     conn.commit()
-                    st.success(f"Trade closed successfully. Transaction type: {reverse_type}, Quantity: {quantity}, Price: ${current_price:.2f}")
+                    
+                    placeholder = st.empty()
+
+                    # Show a message
+                    placeholder.success(f"Trade closed successfully. Transaction type: {reverse_type}, Quantity: {quantity}, Price: ${current_price:.2f}, Profit/Loss: ${profit_loss:.2f}")
+
+                    # Wait for 5 seconds
+                    time.sleep(5)
+
+                    # Clear the message
+                    placeholder.empty()
+
                 else:
                     st.error("Original transaction not found.")
-
         except Exception as e:
             st.error(f"Failed to close trade: {e}")
+        finally:
+            conn.close()
+    else:
+        st.error("Failed to connect to the database.")
+        
+        
+def calculate_current_holdings(user_id):
+    conn = connect_to_database()
+    if conn:
+        try:
+            # Initialize total holdings value
+            total_holdings_value = 0.0  
+            with conn.cursor() as cur:
+                # Fetch all open transactions for the user
+                cur.execute("""
+                SELECT stock_symbol, transaction_type, quantity, price
+                FROM transactions
+                WHERE demo_id = (SELECT demo_id FROM demo_accounts WHERE user_id = %s) AND status = 'OPEN';
+                """, (user_id,))
+
+                for row in cur.fetchall():
+                    symbol, transaction_type, quantity, transaction_price = row
+                    current_price = get_current_price(symbol)
+                    
+                    
+                    transaction_price = float(transaction_price)
+                    
+                    if transaction_type == 'BUY':
+                        # Calculate the change in value since the transaction
+                        value_change = (current_price - transaction_price) * quantity
+                    else:  # transaction_type == 'SELL'
+                        # Calculate the change in value since the transaction, reverse for sell
+                        value_change = (transaction_price - current_price) * quantity
+
+                    total_holdings_value += value_change
+            
+            # Display the total current holdings value, can be negative or positive
+            st.write(f"Total Current Holdings Value: ${total_holdings_value:.2f}")
+            
+        except Exception as e:
+            st.error(f"Failed to calculate current holdings: {e}")
         finally:
             conn.close()
     else:
@@ -335,14 +457,14 @@ def show_demo_trading():
             
         
         st.write(f"Account Balance: ${balance:.2f}")
-        st.write("Current Holdings: Placeholder") 
+        calculate_current_holdings(user_id)
 
 user_id = st.session_state.get('user_id', None)
 if user_id:
     show_demo_trading()
     st.session_state['current_page'] = 'demo_trading'
 else:
-    st.error('Please log in to view demo trading.')
+    st.error('Please log in to view Demo trading.')
 
 
     
