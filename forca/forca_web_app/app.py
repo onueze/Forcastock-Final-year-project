@@ -19,7 +19,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 choice = None
-
+ # REUSED CODE FOR SENDING EMAILS LINE 22-47 https://python.readthedocs.io/fr/hack-in-language/library/email-examples.html
 def send_verification_email(user_email, verification_code):
     smtp_server = 'smtp.gmail.com'  
     smtp_port = 587  # commonly 587 for TLS

@@ -11,9 +11,6 @@ def logout_user():
     
 def display_profile_info():
 
-    # Retrieve the user's information from session state or database
-    user_info = st.session_state['user_id']  # Implement this function
-
     # Display the user profile information
     st.subheader('Account Details')
     st.text(f"User ID: {st.session_state['user_id']}")

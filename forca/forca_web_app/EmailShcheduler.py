@@ -45,7 +45,7 @@ def fetch_inactive_users():
             conn.close()
 
 
-
+ # REUSED CODE FOR SENDING EMAILS LINE 49-75 https://python.readthedocs.io/fr/hack-in-language/library/email-examples.html
 def send_email(to_address):
     """Send a reminder email to the specified address."""
     smtp_server = 'smtp.gmail.com'  
