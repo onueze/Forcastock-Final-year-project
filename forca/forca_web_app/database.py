@@ -5,13 +5,15 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
+
+
 def connect_to_database():
     # Get database connection parameters from environment variables
     db_name = os.environ.get('DB_NAME')
     db_user = os.environ.get('DB_USER')
     db_password = os.environ.get('DB_PASSWORD')
     db_host = os.environ.get('DB_HOST')
-    db_port = os.environ.get('DB_PORT')
+    db_port = int(os.environ.get('DB_PORT'))
     
     try:
         # Connect to PostgreSQL database
@@ -20,7 +22,8 @@ def connect_to_database():
             user=db_user,
             password=db_password,
             host=db_host,
-            port=db_port
+            port=db_port,
+            sslmode='require'
         )
         print("Connected to the database")
         return conn
