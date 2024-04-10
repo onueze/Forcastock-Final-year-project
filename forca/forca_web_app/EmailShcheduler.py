@@ -4,33 +4,42 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import psycopg2
 import os
+from dotenv import load_dotenv
 
-
+# This email scheduler is executed within a different folder on the developers device due to access problems but still included into the submitted repository
 def fetch_inactive_users():
     """Fetch users who made a trade between 0 to 12 hours ago."""
+    
+    # Get database connection parameters from environment variables. The environment variables are not pushed to the github repo for safety
+    db_name = os.environ.get('DB_NAME')
+    db_user = os.environ.get('DB_USER')
+    db_password = os.environ.get('DB_PASSWORD')
+    db_host = os.environ.get('DB_HOST')
+    db_port = os.environ.get('DB_PORT')
+    
     try:
         conn = psycopg2.connect(
-            dbname="postgres",
-            user="postgres",
-            password="Alexel01",
-            host="localhost",
-            port="5432"
+            dbname=db_name,
+            user=db_user,
+            password=db_password,
+            host=db_host,
+            port=db_port
         )
         cur = conn.cursor()
 
         # This query fetches emails of users who have a transaction timestamp 
-        # between 0 to 12 hours ago.
+        # between 24 to 48 hours ago but no transactions in the last 24 hours.
         cur.execute("""
         SELECT DISTINCT u.email
         FROM users u
         INNER JOIN demo_accounts da ON u.id = da.user_id
         INNER JOIN transactions t ON da.demo_id = t.demo_id
-        WHERE t.timestamp BETWEEN NOW() - INTERVAL '12 hours' AND NOW()
+        WHERE t.timestamp BETWEEN NOW() - INTERVAL '48 hours' AND NOW() - INTERVAL '24 hours'
         AND u.id NOT IN (
             SELECT da.user_id
             FROM demo_accounts da
             INNER JOIN transactions t ON da.demo_id = t.demo_id
-            WHERE t.timestamp > NOW() - INTERVAL '0 hours'
+            WHERE t.timestamp > NOW() - INTERVAL '24 hours'
         );
         """)
 
@@ -48,10 +57,12 @@ def fetch_inactive_users():
  # REUSED CODE FOR SENDING EMAILS LINE 49-75 https://python.readthedocs.io/fr/hack-in-language/library/email-examples.html
 def send_email(to_address):
     """Send a reminder email to the specified address."""
-    smtp_server = 'smtp.gmail.com'  
-    smtp_port = 587  # commonly 587 for TLS
-    smtp_user = 'forcastocks@gmail.com'  
-    smtp_password = 'kjwx djbc bgno ssan'  
+    
+    smtp_server = os.environ.get('SMTP_SERVER')
+    smtp_port = int(os.environ.get('SMTP_PORT'))  # Convert port to integer
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_password = os.environ.get('SMTP_PASSWORD')
+    
 
     # Setup message
     body = "Hi there, don't forget to place your trade today to keep up with your trading goals!\n\nYour Forcastock Team"

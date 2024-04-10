@@ -13,18 +13,23 @@ import time
 #from pages.Dashboard import display_dashboard
 #from pages.StockPrediction import show_stock_prediction
 #from pages.DemoTrading import show_demo_trading
-
+import os
+from dotenv import load_dotenv
 
 import smtplib
 from email.mime.text import MIMEText
 
+# Load environment variables from .env file
+load_dotenv()
+
 choice = None
  # REUSED CODE FOR SENDING EMAILS LINE 22-47 https://python.readthedocs.io/fr/hack-in-language/library/email-examples.html
 def send_verification_email(user_email, verification_code):
-    smtp_server = 'smtp.gmail.com'  
-    smtp_port = 587  # commonly 587 for TLS
-    smtp_user = 'forcastocks@gmail.com'  
-    smtp_password = 'kjwx djbc bgno ssan'  
+    
+    smtp_server = os.environ.get('SMTP_SERVER')
+    smtp_port = int(os.environ.get('SMTP_PORT'))  # Convert port to integer
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_password = os.environ.get('SMTP_PASSWORD')
 
     # Setup message
     message = MIMEText(f"Your verification code is: {verification_code}")
@@ -51,7 +56,6 @@ def generate_verification_code():
     return random.randint(100000, 999999)
 
 def login_page():
-    
     st.subheader('Login')
     email = st.text_input('Email Address', key='login_email_key')
 

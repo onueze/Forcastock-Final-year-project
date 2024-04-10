@@ -1,14 +1,26 @@
 import psycopg2
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 def connect_to_database():
+    # Get database connection parameters from environment variables
+    db_name = os.environ.get('DB_NAME')
+    db_user = os.environ.get('DB_USER')
+    db_password = os.environ.get('DB_PASSWORD')
+    db_host = os.environ.get('DB_HOST')
+    db_port = os.environ.get('DB_PORT')
+    
     try:
         # Connect to PostgreSQL database
         conn = psycopg2.connect(
-            dbname="postgres",
-            user="postgres",
-            password="Alexel01",
-            host="localhost",
-            port="5432"
+            dbname=db_name,
+            user=db_user,
+            password=db_password,
+            host=db_host,
+            port=db_port
         )
         print("Connected to the database")
         return conn

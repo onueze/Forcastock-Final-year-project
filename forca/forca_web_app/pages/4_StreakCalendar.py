@@ -10,7 +10,7 @@ def fetch_trade_days(user_id, year, month):
     if conn is not None:
         try:
             with conn.cursor() as cur:
-                # Adjust the query to join with the demo_accounts table
+                # Adjusted the query to join with the demo_accounts table
                 sql_query = """
                 SELECT DISTINCT DATE(t.timestamp)
                 FROM transactions t
@@ -29,10 +29,14 @@ def fetch_trade_days(user_id, year, month):
     return trade_days
 
 
-def display_calendar(user_id):
+def display_calendar(user_id, current_day=None):
     # Current year and month
     now = datetime.datetime.now()
     year, month = now.year, now.month
+
+    # If current_day is not provided, use the current day from datetime
+    if current_day is None:
+        current_day = now.day
 
     trade_days = fetch_trade_days(user_id, year, month)
     
@@ -40,13 +44,26 @@ def display_calendar(user_id):
     cal = calendar.monthcalendar(year, month)
     cal_df = pd.DataFrame(cal, columns=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
     
-    # Replace trade days with flames
-    cal_df = cal_df.applymap(lambda day: '🔥' if day in trade_days else day if day != 0 else '')
+    # trade days with flames, and mark the current day with an calendar emoji
+    def mark_days(day):
+        if day == current_day and day in trade_days:
+            return f'📆🔥 {day}'
+        
+        elif day == current_day:
+            return f'📆 {day}'
+        
+        if day in trade_days:
+            return f'🔥 {day}'
+        
+        return day if day != 0 else ''
+
+    cal_df = cal_df.applymap(mark_days)
     
     # Display the current month as a header
     month_name = calendar.month_name[month]
-    st.header(f"Streak Calendar for {month_name} {year}")  # Display the current month and year as a header
+    st.header(f"Streak Calendar for {month_name} {year}")
     st.table(cal_df)
+
     
     
     
