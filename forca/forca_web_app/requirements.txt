@@ -3,4 +3,4 @@ pandas
 yfinance
 psycopg2-binary
 plotly
-dotenv
+python-dotenv
