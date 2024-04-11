@@ -61,13 +61,6 @@ def display_dashboard():
     fig.update_yaxes(title_text='Closing Price (USD)')
     st.plotly_chart(fig)
 
-    # Button to navigate to the stock prediction page
-    if st.button("Predict Stock"):
-        st.session_state['selected_ticker'] = symbol
-        # Update the session state to indicate the current page or action
-        st.session_state.current_page = "stock_prediction"
-        # Rerun the app to reflect changes
-        st.rerun()
 
 
     # Displaying metrics
