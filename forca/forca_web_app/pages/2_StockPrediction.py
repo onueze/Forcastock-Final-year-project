@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 
 
 
-MODEL_PATH = '../my_lstm_model.keras'
+MODEL_PATH = '../../my_lstm_model.keras'
 SEQUENCE_LENGTH = 200
 
 @st.cache_data
@@ -52,6 +52,7 @@ def create_sequences(data, sequence_length):
     return np.array(X), np.array(y)
 
 
+# The process of scraping the sp500 data was taken from the Beautiful Soup package https://realpython.com/beautiful-soup-web-scraper-python/
 @st.cache_data
 def scrape_sp500_tickers():
     url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
