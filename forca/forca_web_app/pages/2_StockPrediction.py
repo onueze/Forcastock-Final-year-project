@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 
 
 
-MODEL_PATH = '../../my_lstm_model.keras'
+MODEL_PATH = 'forca/my_lstm_model.keras'
 SEQUENCE_LENGTH = 200
 
 @st.cache_data
