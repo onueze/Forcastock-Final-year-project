@@ -36,9 +36,6 @@ def display_dashboard():
         df.reset_index(inplace=True)
         return df
         
-    def get_current_price(ticker):
-        data = yf.Ticker(ticker).history(period='1m')
-        return data['Close'].iloc[-1]
         
 
     # Retrieve user input
@@ -46,7 +43,6 @@ def display_dashboard():
     df = get_data(symbol, start, end)
     company_name = get_company_name(symbol)
         
-    current_price = get_current_price(symbol)
 
     # Displaying the stock information
     company_name = get_company_name(symbol)
