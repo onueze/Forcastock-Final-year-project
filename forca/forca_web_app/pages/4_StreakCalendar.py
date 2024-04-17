@@ -5,6 +5,14 @@ from database import connect_to_database
 import streamlit as st
 
 def fetch_trade_days(user_id, year, month):
+    """
+    Fetches the days in a month and year on which trades were made by a given user.
+
+    :param user_id: Unique of user.
+    :param year: Year for which trade days are to be fetched.
+    :param month: Month for which trade days are to be fetched.
+    :return: List of days in the month when trades occurred.
+    """
     conn = connect_to_database()
     trade_days = []
     if conn is not None:
@@ -30,6 +38,13 @@ def fetch_trade_days(user_id, year, month):
 
 
 def display_calendar(user_id, current_day=None):
+    """
+    Displays a calendar for the current month, highlighting the days on which the user traded,
+    and marking the current day with a calendar emoji.
+
+    :param user_id: Unique of user.
+    :param current_day: The current day to highlight on the calendar. Defaults to today's date if None.
+    """
     # Current year and month
     now = datetime.datetime.now()
     year, month = now.year, now.month
