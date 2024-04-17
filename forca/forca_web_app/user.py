@@ -2,6 +2,9 @@ from database import *
 
 
 def authenticate_user(email):
+    """
+    User email attempting to log in is checked against the database
+    """
     conn = connect_to_database()
     if conn:
         try:
@@ -25,6 +28,9 @@ def authenticate_user(email):
         return None
     
 def register_user(email):
+    """
+    User email will be registered
+    """
     conn = connect_to_database()
     if conn:
         try:
