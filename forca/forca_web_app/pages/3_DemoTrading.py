@@ -16,6 +16,11 @@ MARGIN_PERCENTAGE = 10
 # The process of scraping the sp500 data was taken from the Beautiful Soup package https://realpython.com/beautiful-soup-web-scraper-python/
 @st.cache_data
 def scrape_sp500_tickers():
+    """
+    Scrape S&P 500 ticker symbols and company names from Wikipedia.
+     
+    :return: List of tuples containing ticker symbols and company names.
+    """
     url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
     html = requests.get(url).text
     soup = BeautifulSoup(html, 'html.parser')
@@ -32,15 +37,39 @@ def scrape_sp500_tickers():
 
 @st.cache_data
 def load_dataset(ticker, start_date='2022-01-01', end_date=datetime.datetime.now().strftime("%Y-%m-%d")):
+    """
+    Download and return stock price data for a given ticker, start date, and end date.
+    
+    :param ticker: Ticker symbol of the stock.
+    :param start_date: Start date for the data retrieval.
+    :param end_date: End date for the data retrieval.
+    :return: DataFrame containing stock price data.
+    """
     data = yf.download(ticker, start=start_date, end=end_date)
     return pd.DataFrame(data)
 
 @st.cache_data
 def get_current_price(ticker):
+    """
+    Retrieve the current closing price of a stock.
+    
+    :param ticker: Stock ticker symbol.
+    :return: Latest closing price of the stock.
+    """
     data = yf.Ticker(ticker).history(period='1m')
     return data['Close'].iloc[-1]
 
 def update_transaction(user_id, ticker, lot_size, transaction_type, current_price):
+    """
+    Update the transaction records in the database for a given user and stock.
+    
+    :param user_id: User ID.
+    :param ticker: Stock ticker symbol.
+    :param lot_size: Number of shares to buy/sell for a transaction.
+    :param transaction_type: Type of transaction (BUY or SELL).
+    :param current_price: Current price of the stock.
+    :return: Tuple showing success/failure and a message describing the outcome.
+    """
     conn = connect_to_database()
     if conn is not None:
         try:
@@ -65,6 +94,13 @@ def update_transaction(user_id, ticker, lot_size, transaction_type, current_pric
         return False, "Failed to connect to the database."
 
 def buy_stock(ticker, lot_size):
+    """
+    Execute a BUY transaction for a given ticker and lot size.
+    :param ticker: Stock ticker symbol.
+    :param lot_size: Number of shares to purchase.
+    """
+    
+    
     current_price = get_current_price(ticker)
     user_id = st.session_state.user_id
     total_purchase_price = current_price * lot_size
@@ -104,6 +140,13 @@ def buy_stock(ticker, lot_size):
         st.error(message)
 
 def sell_stock(ticker, lot_size):
+    """
+    Execute a SELL transaction for a given ticker and lot size.
+    
+    :param ticker: Stock ticker symbol.
+    :param lot_size: Number of shares to purchase.
+    """
+    
     current_price = get_current_price(ticker)
     user_id = st.session_state.user_id
     total_purchase_price = current_price * lot_size
@@ -141,9 +184,16 @@ def sell_stock(ticker, lot_size):
         st.error(message)
         
 def update_account_balance(user_id, amount):
+    """
+    Update the balance of a user's demo account.
+    
+    :param user_id: User ID.
+    :param amount: Amount to update in the user's account balance.
+    """
     conn = connect_to_database()
     if conn is not None:
         try:
+            # Updates the amount allocated to the demo account
             with conn.cursor() as cur:
                 cur.execute("""
                     UPDATE demo_accounts
@@ -157,18 +207,43 @@ def update_account_balance(user_id, amount):
             conn.close()
 
 def calculate_moving_averages(data, windows=[20, 50]):
+    """
+    Calculate moving averages for the Close price over specified window sizes.
+    
+    :param data: DataFrame containing stock price data.
+    :param windows: window sizes for Moving Average.
+    :return: DataFrame with additional columns for each moving average.
+    """
     for window in windows:
+        # Calculate and add moving average to the DataFrame for each specified window size
         data[f'MA{window}'] = data['Close'].rolling(window=window).mean()
     return data
 
 def calculate_bollinger_bands(data, window=20, num_of_std=2):
+    """
+    Calculate Bollinger Bands for the'Close price data.
+    
+    :param data: DataFrame containing stock price data.
+    :param window: moving average window for Bollinger band.
+    :param num_of_std: Number of standard deviations to use for the upper and lower bands.
+    :return: DataFrame with additional columns for Bollinger Bands.
+    """
+    
+    # Calculate the moving average for the specified window
     data['MA20'] = data['Close'].rolling(window=window).mean()
+    # Calculate the standard deviation for the same window
     data['STD20'] = data['Close'].rolling(window=window).std()
+     # Calculate the upper Bollinger Band
     data['UpperBB'] = data['MA20'] + (data['STD20'] * num_of_std)
+    # Calculate the lower Bollinger Band
     data['LowerBB'] = data['MA20'] - (data['STD20'] * num_of_std)
     return data
 
 def trade_stocks():
+    """
+    Display the stock trading page for buying or selling stocks.
+    """
+    
     st.subheader("Trade Stocks")
     
     # Scrape S&P 500 tickers
@@ -183,12 +258,14 @@ def trade_stocks():
     
     if ticker:
         try:
+            # fetch and display the current price of the selected ticker
             current_price = get_current_price(ticker)
             st.write(f"Current Price of {ticker}: ${current_price:.2f}")
         except Exception:
             st.error("Failed to fetch current price. Please check the ticker and try again.")
             return
-
+        
+        # # User input for the number of shares to trade
         lot_size = st.number_input("Enter lot size (number of shares):", min_value=1, step=1)
         col1, col2 = st.columns(2)
         with col1:
@@ -199,18 +276,21 @@ def trade_stocks():
             if st.button("Sell"):
                 sell_stock(ticker, lot_size)
                 st.rerun()
-
+                
+        # User input for start date of the stock data to fetch and display
         start_date = st.date_input("Start Date", value=datetime.date.today() - datetime.timedelta(days=365))
         data = load_dataset(ticker, start_date=start_date)
         if not data.empty:
             analysis_options = st.multiselect('Select Analysis Options', ['Moving Averages', 'Bollinger Bands'])
             fig = go.Figure(data=[go.Candlestick(x=data.index, open=data['Open'], high=data['High'], low=data['Low'], close=data['Close'])])
-
+            
+            # Add moving average lines to the plot if selected
             if 'Moving Averages' in analysis_options:
                 data = calculate_moving_averages(data)
                 for window in [20, 50]:
                     fig.add_trace(go.Scatter(x=data.index, y=data[f'MA{window}'], mode='lines', name=f'MA{window}'))
-
+                    
+             # Add Bollinger Bands to the plot if selected
             if 'Bollinger Bands' in analysis_options:
                 data = calculate_bollinger_bands(data)
                 fig.add_trace(go.Scatter(x=data.index, y=data['UpperBB'], mode='lines', name='Upper Bollinger Band', line=dict(color='rgba(250, 0, 0, 0.75)')))
@@ -221,9 +301,16 @@ def trade_stocks():
             
 
 def display_open_trades(user_id):
+    """
+    Display open trades for a user.
+    
+    :param user_id: User ID.
+    """
     conn = connect_to_database()
     if conn is not None:
         try:
+            
+            # fetches all of the transactions allocated to the users created demo account
             with conn.cursor() as cur:
                 cur.execute("""
                     SELECT transaction_id, transaction_type, stock_symbol, quantity, price, timestamp
@@ -236,14 +323,18 @@ def display_open_trades(user_id):
                 trades = cur.fetchall()
 
                 if trades:
+                    
+                    # Initalizes the Dataframe to store open trades
                     df = pd.DataFrame(trades, columns=['Transaction ID', 'Type', 'Symbol', 'Quantity', 'Price', 'Timestamp'])
                     st.subheader("Open Trades")
                     
+                    # defines the columns of the open trades frame
                     cols = st.columns([3, 3, 3, 3, 3, 3, 3, 3, 3])
                     headers = ['Transaction ID', 'Type', 'Symbol', 'Quantity', 'Price', 'Timestamp', 'Gain/Loss %', 'Gain/Loss $', 'Action']
                     for col, header in zip(cols, headers):
                         col.write(header)
-
+                        
+                        
                     for index, row in df.iterrows():
                         cols = st.columns([3, 3, 3, 3, 3, 3, 3, 3, 3])
                         cols[0].write(row['Transaction ID'])
@@ -256,6 +347,8 @@ def display_open_trades(user_id):
                         current_price = get_current_price(row['Symbol'])
                         price = float(row['Price'])
                         quantity = row['Quantity']
+                        
+                        # calculate gain/loss value 
                         if row['Type'] == 'BUY':
                             dollar_gain_loss = (current_price - price) * quantity  
                         else:
@@ -269,6 +362,7 @@ def display_open_trades(user_id):
                         else:
                             color = 'red'
                         
+                        # HTML Markdown to display gain in green or loss in red
                         cols[6].markdown(f"<span style='color:{color};'>{gain_loss_percentage:+.2f}%</span>", unsafe_allow_html=True)
                         cols[7].markdown(f"<span style='color:{color};'>${dollar_gain_loss:+.2f}</span>", unsafe_allow_html=True)
 
@@ -291,6 +385,12 @@ def display_open_trades(user_id):
     
         
 def close_trade(user_id, transaction_id):
+    """
+    Close an open trade for a user by reversing the transaction type and updating the account balance.
+    
+    :param user_id: User ID.
+    :param transaction_id: ID of the transaction to close.
+    """
     conn = connect_to_database()
     if conn is not None:
         try:
@@ -367,6 +467,11 @@ def close_trade(user_id, transaction_id):
         
         
 def calculate_current_holdings(user_id):
+    """
+    Calculate the total current holdings value for a user account based on open transactions.
+    
+    :param user_id: User's ID.
+    """
     conn = connect_to_database()
     if conn:
         try:
@@ -379,7 +484,8 @@ def calculate_current_holdings(user_id):
                 FROM transactions
                 WHERE demo_id = (SELECT demo_id FROM demo_accounts WHERE user_id = %s) AND status = 'OPEN';
                 """, (user_id,))
-
+                
+                
                 for row in cur.fetchall():
                     symbol, transaction_type, quantity, transaction_price = row
                     current_price = get_current_price(symbol)
@@ -410,6 +516,12 @@ def calculate_current_holdings(user_id):
 
             
 def check_or_create_demo_account(user_id):
+    """
+    Check if a user has an existing demo account or create one if it does not exist.
+    
+    :param user_id: User's ID.
+    :return: Tuple indicating if an account exists, the account ID, and the balance.
+    """
     conn = connect_to_database()
     if conn is not None:
         try:
@@ -435,6 +547,13 @@ def check_or_create_demo_account(user_id):
 
     
 def allocate_initial_amount(user_id):
+    """
+    Allocate an initial amount to a user's new demo account.
+    
+    :param user_id: User ID.
+    :return: ID of the newly created demo account or None if creation failed.
+    """
+    
     initial_amount = st.number_input("Enter initial amount for the demo account:", min_value=100.0, step=100.0, format="%.2f")
     if st.button("Allocate"):
         conn = connect_to_database()
@@ -457,6 +576,10 @@ def allocate_initial_amount(user_id):
             return None
 
 def show_demo_trading():
+    """
+    Display the demo trading interface for a logged-in user.
+    """
+    
     st.title("Demo Trading Account")
     
     if 'user_id' not in st.session_state:
@@ -464,7 +587,8 @@ def show_demo_trading():
         return
 
     user_id = st.session_state['user_id']
-
+    
+    # checks if the user has an existing demo account
     has_account, demo_id, balance = check_or_create_demo_account(user_id)
     
     if not has_account:
@@ -488,6 +612,7 @@ def show_demo_trading():
         st.write(f"Account Balance: ${balance:.2f}")
         calculate_current_holdings(user_id)
 
+# checking for available user_id in the current session
 user_id = st.session_state.get('user_id', None)
 if user_id:
     show_demo_trading()
