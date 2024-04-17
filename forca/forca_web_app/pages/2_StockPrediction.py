@@ -3,7 +3,6 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 import datetime
-from tensorflow.keras.initializers import Orthogonal
 from tensorflow.keras.models import load_model
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -13,10 +12,11 @@ import requests
 from bs4 import BeautifulSoup
 
 # please uncomment for local testing
-MODEL_PATH = '../my_lstm_model.keras'
+#MODEL_PATH = '../my_lstm_model.keras'
 
 # please uncomment for deployment
-#MODEL_PATH = 'forca/my_lstm_model.keras'
+MODEL_PATH = 'forca/my_lstm_model.keras'
+
 SEQUENCE_LENGTH = 200
 
 @st.cache_data
@@ -121,6 +121,7 @@ def show_stock_prediction():
                 st.plotly_chart(fig, use_container_width=True)
 
                 # Displaying the predicted future price in HTML markdown
+                # HTML markdown from streamlit documentation https://docs.streamlit.io/develop/api-reference/text/st.markdown
                 st.markdown(f"<h4 style='color:green;'>Predicted Future Price after {n_future_steps} days: ${predicted_prices[-1][0]:.2f}</h4>", unsafe_allow_html=True)
                 
                 # following code is taken from the research component
@@ -136,6 +137,7 @@ def show_stock_prediction():
                 
                 # Define the starting index for test data based on SEQUENCE_LENGTH and split_index
                 test_start_idx = split_index + SEQUENCE_LENGTH
+                
                 # Create a date index for the test set
                 dates_for_test = df.index[test_start_idx:test_start_idx + len(X_test)]
 
@@ -156,9 +158,10 @@ def show_stock_prediction():
                 ax.set_ylabel('Price')
                 ax.legend()
                 st.pyplot(fig)
-
-
-
+                
+                
+                
+               # financial data was able to be taken from the yfinance documentation https://pypi.org/project/yfinance/ 
             try:
                 company_name = yf.Ticker(ticker_symbol).info['longName']
                 st.write(f"**Company Name:** {company_name}")
