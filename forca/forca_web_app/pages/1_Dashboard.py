@@ -10,8 +10,6 @@ import plotly.graph_objects as go
 import plotly.express as px
 import requests
 
-from bs4 import BeautifulSoup
-
 # Function to display the dashboard
 def display_dashboard():
 
@@ -24,18 +22,8 @@ def display_dashboard():
     def get_input():
         start_date = st.sidebar.date_input("Start Date", pd.to_datetime('2020-01-01'))
         end_date = st.sidebar.date_input("End Date", pd.to_datetime('today'))
-        
-        # Scrape S&P 500 tickers
-        sp500_tickers = scrape_sp500_tickers()
-    
-        # options for the selectbox
-        options = [f"{ticker} - {company}" for ticker, company in sp500_tickers]
-        # Sort options alphabetically by company name
-        options.sort()
-        selected_option = st.sidebar.selectbox("Select a company:", options)
-        ticker_symbol = selected_option.split(" - ")[0]
-        
-        return start_date, end_date, ticker_symbol
+        stock_symbol = st.sidebar.text_input("Stock Symbol", "AAPL")
+        return start_date, end_date, stock_symbol
 
     def get_company_name(symbol):
         ticker = yf.Ticker(symbol)
@@ -51,30 +39,14 @@ def display_dashboard():
     def get_current_price(ticker):
         data = yf.Ticker(ticker).history(period='1m')
         return data['Close'].iloc[-1]
-    
-    @st.cache_data
-    def scrape_sp500_tickers():
-        url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-        html = requests.get(url).text
-        soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find('table', {'class': 'wikitable sortable'})
-    
-        # Initialize an empty list to store tickers
-        tickers = []
-        # Loop over each row in the table except the header row
-        for row in table.findAll('tr')[1:]:
-            ticker = row.findAll('td')[0].text.strip()
-            company_name = row.findAll('td')[1].text.strip()
-            tickers.append((ticker, company_name))
-        return tickers
-    
-    
+        
 
     # Retrieve user input
     start, end, symbol = get_input()
     df = get_data(symbol, start, end)
     company_name = get_company_name(symbol)
         
+    current_price = get_current_price(symbol)
 
     # Displaying the stock information
     company_name = get_company_name(symbol)
@@ -88,6 +60,7 @@ def display_dashboard():
     fig.update_xaxes(title_text='Date')
     fig.update_yaxes(title_text='Closing Price (USD)')
     st.plotly_chart(fig)
+
 
 
     # Displaying metrics

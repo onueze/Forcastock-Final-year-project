@@ -57,7 +57,7 @@ def display_calendar(user_id, current_day=None):
         
         return day if day != 0 else ''
 
-    cal_df = cal_df.applymap(mark_days)
+    cal_df = cal_df.map(mark_days)
     
     # Display the current month as a header
     month_name = calendar.month_name[month]

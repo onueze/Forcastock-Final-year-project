@@ -3,6 +3,7 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 import datetime
+from tensorflow.keras.initializers import Orthogonal
 from tensorflow.keras.models import load_model
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -12,10 +13,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-# for local testing change to
-# MODEL_PATH = '../my_lstm_model.keras'
 
-# for deployment
 MODEL_PATH = 'forca/my_lstm_model.keras'
 SEQUENCE_LENGTH = 200
 
@@ -31,10 +29,7 @@ def load_lstm_model():
 def prepare_data(df):
     scaler = MinMaxScaler()
     scaled_close = scaler.fit_transform(df['Close'].values.reshape(-1, 1))
-    X = []
-    for i in range(len(scaled_close) - SEQUENCE_LENGTH):
-        sequence = scaled_close[i:(i + SEQUENCE_LENGTH)]
-        X.append(sequence)
+    X = [scaled_close[i:(i + SEQUENCE_LENGTH)] for i in range(len(scaled_close) - SEQUENCE_LENGTH)]
     return np.array(X), scaler
 
 def predict_future_prices(model, last_sequence, scaler, n_future_steps):
@@ -57,7 +52,7 @@ def create_sequences(data, sequence_length):
     return np.array(X), np.array(y)
 
 
-# The process of scraping the sp500 data into the table was taken from the Beautiful Soup package https://realpython.com/beautiful-soup-web-scraper-python/
+# The process of scraping the sp500 data was taken from the Beautiful Soup package https://realpython.com/beautiful-soup-web-scraper-python/
 @st.cache_data
 def scrape_sp500_tickers():
     url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
@@ -121,7 +116,6 @@ def show_stock_prediction():
                 st.plotly_chart(fig, use_container_width=True)
 
                 # Displaying the predicted future price in HTML markdown
-                # HTML markdown from streamlit documentation https://docs.streamlit.io/develop/api-reference/text/st.markdown
                 st.markdown(f"<h4 style='color:green;'>Predicted Future Price after {n_future_steps} days: ${predicted_prices[-1][0]:.2f}</h4>", unsafe_allow_html=True)
                 
                 # following code is taken from the research component
@@ -157,10 +151,9 @@ def show_stock_prediction():
                 ax.set_ylabel('Price')
                 ax.legend()
                 st.pyplot(fig)
-                
-                
-                
-                # financial data was able to be taken from the yfinance documentation https://pypi.org/project/yfinance/
+
+
+
             try:
                 company_name = yf.Ticker(ticker_symbol).info['longName']
                 st.write(f"**Company Name:** {company_name}")
