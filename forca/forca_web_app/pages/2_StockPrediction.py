@@ -13,10 +13,10 @@ import requests
 from bs4 import BeautifulSoup
 
 # please uncomment for local testing
-MODEL_PATH = '../my_lstm_model.keras'
+#MODEL_PATH = '../my_lstm_model.keras'
 
 # please uncomment for deployment
-# MODEL_PATH = 'forca/my_lstm_model.keras'
+MODEL_PATH = 'forca/my_lstm_model.keras'
 SEQUENCE_LENGTH = 200
 
 @st.cache_data
