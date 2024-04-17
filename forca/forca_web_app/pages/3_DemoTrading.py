@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 # Margin percentage for both buy and sell positions
 MARGIN_PERCENTAGE = 10  
 
-
+# The process of scraping the sp500 data was taken from the Beautiful Soup package https://realpython.com/beautiful-soup-web-scraper-python/
 @st.cache_data
 def scrape_sp500_tickers():
     url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
@@ -30,12 +30,12 @@ def scrape_sp500_tickers():
         tickers.append((ticker, company_name))
     return tickers
 
-
+@st.cache_data
 def load_dataset(ticker, start_date='2022-01-01', end_date=datetime.datetime.now().strftime("%Y-%m-%d")):
     data = yf.download(ticker, start=start_date, end=end_date)
     return pd.DataFrame(data)
 
-
+@st.cache_data
 def get_current_price(ticker):
     data = yf.Ticker(ticker).history(period='1m')
     return data['Close'].iloc[-1]

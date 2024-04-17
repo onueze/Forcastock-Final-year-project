@@ -12,9 +12,11 @@ import matplotlib.pyplot as plt
 import requests
 from bs4 import BeautifulSoup
 
+# please uncomment for local testing
+MODEL_PATH = '../my_lstm_model.keras'
 
-
-MODEL_PATH = 'forca/my_lstm_model.keras'
+# please uncomment for deployment
+# MODEL_PATH = 'forca/my_lstm_model.keras'
 SEQUENCE_LENGTH = 200
 
 @st.cache_data
@@ -30,6 +32,10 @@ def prepare_data(df):
     scaler = MinMaxScaler()
     scaled_close = scaler.fit_transform(df['Close'].values.reshape(-1, 1))
     X = [scaled_close[i:(i + SEQUENCE_LENGTH)] for i in range(len(scaled_close) - SEQUENCE_LENGTH)]
+    X = []
+    for i in range(len(scaled_close) - SEQUENCE_LENGTH):
+        sequence = scaled_close[i:(i + SEQUENCE_LENGTH)]
+        X.append(sequence)
     return np.array(X), scaler
 
 def predict_future_prices(model, last_sequence, scaler, n_future_steps):
