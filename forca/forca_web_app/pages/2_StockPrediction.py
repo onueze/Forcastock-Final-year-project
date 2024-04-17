@@ -12,10 +12,10 @@ import requests
 from bs4 import BeautifulSoup
 
 # please uncomment for local testing
-MODEL_PATH = '../my_lstm_model.keras'
+#MODEL_PATH = '../my_lstm_model.keras'
 
 # please uncomment for deployment
-#MODEL_PATH = 'forca/my_lstm_model.keras'
+MODEL_PATH = 'forca/my_lstm_model.keras'
 
 SEQUENCE_LENGTH = 200
 
@@ -279,7 +279,7 @@ def show_stock_prediction():
             except KeyError:
                 st.write("52 Week Low information not available.")
             
-
+# checking for available user_id in the current session
 user_id = st.session_state.get('user_id', None)
 if user_id:
     show_stock_prediction()

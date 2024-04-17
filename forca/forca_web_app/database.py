@@ -8,6 +8,9 @@ load_dotenv()
 
 
 def connect_to_database():
+    """
+    Connection to PostgreSQL is established
+    """
     # Get database connection parameters from environment variables
     db_name = os.environ.get('DB_NAME')
     db_user = os.environ.get('DB_USER')
@@ -33,6 +36,9 @@ def connect_to_database():
     
 
 def create_table(table_name, table_schema):
+    """
+    Create Table statements to initialize the database table scheme
+    """
     conn = connect_to_database()
     cur = conn.cursor()
 
@@ -61,6 +67,9 @@ def create_table(table_name, table_schema):
         conn.close()
 
 def create_all_tables():
+    """
+    All of the tables used for the application are listed here and iterated over to create them in the database
+    """
     # Define table names and schemas
     tables = [
         ("users", "id SERIAL PRIMARY KEY, email VARCHAR(100) NOT NULL"),

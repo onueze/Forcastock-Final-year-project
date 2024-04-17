@@ -9,7 +9,7 @@ def about_page():
     st.write("""
     ### Welcome to Forcastock!
 
-    Forcastock is a stock market dashboard application designed to provide real-time stock market data, analysis tools, and trading simulations. Our goal is to empower individual investors and traders with the tools and information they need to make informed decisions.
+    Forcastock is a stock market dashboard application designed to provide real-time stock market data, analysis tools, and trading simulations. The goal is to empower individual investors and traders with the tools and information they need to make informed decisions.
 
     #### Features of Forcastock:
     - **Real-Time Market Data:** Access up-to-the-minute information on stock prices, trends, and market conditions.
@@ -22,8 +22,10 @@ def about_page():
     #### Disclaimer
     Forcastock is a tool for financial analysis and simulation, not a financial advisor. The information and features provided by Forcastock are for educational purposes only and should not be interpreted as investment advice. Users should conduct their own research or consult with a financial advisor before making investment decisions. Forcastock and its creator will not be liable for any financial loss or damage arising from the use of this application.
     
+    #### General Note: 
+    To refresh the page use the 'R' key of your keyboard. Refreshing the browser while being logged in will result in you needing to login again.
     
-    Please engage with the Navigation Bar and
+    Please engage with the Navigation Bar (top left corner) and
     
     #### ENJOY FORCASTOCK!!!
     """)

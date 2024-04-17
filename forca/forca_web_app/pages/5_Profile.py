@@ -3,6 +3,9 @@ from database import connect_to_database
 import pandas as pd
 
 def logout_user():
+    """
+    Log out the current user by clearing all session state information and rerunning the application.
+    """
     # Logic to log out the user
     for key in list(st.session_state.keys()):
         del st.session_state[key]
@@ -10,7 +13,10 @@ def logout_user():
     
     
 def display_profile_info():
-
+    """
+    Display the current user's profile information (user ID and email).
+    """
+    
     # Display the user profile information
     st.subheader('Account Details')
     st.text(f"User ID: {st.session_state['user_id']}")
@@ -18,6 +24,11 @@ def display_profile_info():
 
 
 def view_all_transactions(user_id):
+    """
+    Fetch and display all transactions associated with a user's demo account from the database.
+
+    :param user_id: The unique identifier of the user.
+    """
     # Fetch and display all transactions from the database
     conn = connect_to_database()
     if conn:
@@ -43,6 +54,11 @@ def view_all_transactions(user_id):
         st.error("Failed to connect to the database.")
 
 def delete_demo_account(user_id):
+    """
+    Delete a user's demo account and adjacent transactions from the database.
+
+    :param user_id: The unique identifier of the user.
+    """
     
     if st.button('Delete Demo Account'):
         conn = connect_to_database()
@@ -72,6 +88,11 @@ def delete_demo_account(user_id):
             
             
 def delete_user_account(user_id):
+    """
+    Delete a user account from the database.
+
+    :param user_id: identifier of the user.
+    """
     # Logic to delete a user account
     if st.button('Delete User Account'):
         conn = connect_to_database()
@@ -94,8 +115,15 @@ def delete_user_account(user_id):
             
 
 def profile_page(user_id):
-    st.title('Profile')
+    """
+    the profile page with tabs for profile information, transaction history, demo account management,
+    and account settings.
 
+    :param user_id: identifier of the user.
+    """
+    st.title('Profile')
+    
+    # Display of all tabs
     tab1, tab2, tab3, tab4 = st.tabs(['Profile Information', 'Transactions History', 'Demo Account Management', 'Account Settings'])
 
     with tab1:
@@ -116,7 +144,7 @@ def profile_page(user_id):
         if st.button('Log Out'):
             logout_user()
 
-
+# checking for available user_id in the current session
 user_id = st.session_state.get('user_id', None)
 if user_id:
     profile_page(user_id)

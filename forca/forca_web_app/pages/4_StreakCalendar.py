@@ -83,7 +83,7 @@ def display_calendar(user_id, current_day=None):
     
     
 
-# Usage example
+# checking for available user_id in the current session
 user_id = st.session_state.get('user_id', None)
 if user_id:
     display_calendar(user_id)
